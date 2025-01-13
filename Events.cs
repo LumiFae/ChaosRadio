@@ -42,11 +42,13 @@ namespace ChaosRadio
             if(UnityEngine.Random.Range(0, 100) <= Plugin.Instance.Config.ReplacePercentage)
             {
                 Log.Debug($"Spawning Chaos Radio at {ev.Pickup.Room.Name} in {ev.Pickup.Room.Zone}");
-                Plugin.Instance.ChaosRadio.Spawn(ev.Pickup.Position);
+                Plugin.Instance.ChaosRadio.Spawn(pickup.Position);
+                pickup.Destroy();
             } else
             {
                 Log.Debug($"Spawning NTF Radio at {ev.Pickup.Room.Name} in {ev.Pickup.Room.Zone}");
-                Plugin.Instance.NtfRadio.Spawn(ev.Pickup.Position);
+                Plugin.Instance.NtfRadio.Spawn(pickup.Position);
+                pickup.Destroy();
             }
         }
     }
