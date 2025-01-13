@@ -20,8 +20,6 @@ namespace ChaosRadio.Patches
 
             bool chaosRadio = player.Items.Any(i => Plugin.Instance.ChaosRadio.Check(i));
             
-            Log.Info("Initial " + chaosRadio);
-            
             if (msg.SpeakerNull || (int) msg.Speaker.netId != (int) conn.identity.netId || !(msg.Speaker.roleManager.CurrentRole is IVoiceRole currentRole1) || !currentRole1.VoiceModule.CheckRateLimit() || VoiceChatMutes.IsMuted(msg.Speaker))
                 return false;
             VoiceChatChannel channel = currentRole1.VoiceModule.ValidateSend(msg.Channel);
@@ -32,7 +30,6 @@ namespace ChaosRadio.Patches
             {
                 ReferenceHub allHub = allPlayer.ReferenceHub;
                 bool isCRadio = allPlayer.Items.Any(i => Plugin.Instance.ChaosRadio.Check(i));
-                Log.Info("Player " + isCRadio);
                 if (chaosRadio != isCRadio) continue;
                 if (allHub.roleManager.CurrentRole is IVoiceRole currentRole2)
                 {
