@@ -30,7 +30,7 @@ namespace ChaosRadio
             {
                 pickup.IsEnabled = false;
                 if (!Plugin.Instance.Config.Debug) return;
-                bool isChaosRadio = pickup.IsPickupChaosRadio();
+                bool isChaosRadio = pickup.IsChaosRadio();
                 Log.Debug($"{(isChaosRadio ? "Chaos" : "NTF")} Radio dropped at {ev.Pickup.Room.Name} in {ev.Pickup.Room.Zone}");
             }
         }
@@ -54,7 +54,7 @@ namespace ChaosRadio
         {
             if (ev.Pickup is RadioPickup pickup)
             {
-                if (pickup.IsPickupChaosRadio())
+                if (pickup.IsChaosRadio())
                 {
                     Log.Debug($"Player {ev.Player.Nickname} picked up a Chaos Radio");
                     ev.Player.ShowHint(Plugin.Instance.Translation.ChaosRadioPickupText);
