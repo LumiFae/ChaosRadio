@@ -66,5 +66,22 @@ namespace ChaosRadio
                 }
             }
         }
+
+        public void OnItemAdded(ItemAddedEventArgs ev)
+        {
+            if (ev.Pickup is RadioPickup pickup)
+            {
+                if (Plugin.Instance.Config.GivenItemsDefaultToNtf)
+                {
+                    Log.Debug($"Player {ev.Player.Nickname} was given a radio, and it defaulted to NTF");
+                    Plugin.Instance.NtfRadios.Add(pickup.Serial);
+                }
+                else
+                {
+                    Log.Debug($"Player {ev.Player.Nickname} was given a radio, and it defaulted to Chaos");
+                    Plugin.Instance.ChaosRadios.Add(pickup.Serial);
+                }
+            }
+        }
     }
 }
