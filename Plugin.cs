@@ -26,12 +26,14 @@ namespace ChaosRadio
 
         public override void OnEnabled()
         {
+            Log.Debug("Hello!");
             Instance = this;
 
             try
             {
                 _harmony = new($"lumifae.chaosradio.{DateTime.Now.Ticks}");
                 _harmony.PatchAll();
+                Log.Debug("Patch successful");
             }
             catch (Exception e)
             {
@@ -40,11 +42,13 @@ namespace ChaosRadio
 
             ChaosRadios = new();
             NtfRadios = new();
+            Log.Debug("Lists initialized");
 
             Events = new();
             Exiled.Events.Handlers.Player.Spawned += Events.OnSpawn;
             Exiled.Events.Handlers.Player.DroppedItem += Events.OnDropped;
             Exiled.Events.Handlers.Map.SpawningItem += Events.OnSpawningItem;
+            Log.Debug("Events initialized and spawned");
             
             base.OnEnabled();
         }
@@ -53,12 +57,13 @@ namespace ChaosRadio
         {
             ChaosRadios = null;
             NtfRadios = null;
-            
+            Log.Debug("Lists nullified");
             Exiled.Events.Handlers.Player.Spawned -= Events.OnSpawn;
             Exiled.Events.Handlers.Player.DroppedItem -= Events.OnDropped;
             Exiled.Events.Handlers.Map.SpawningItem -= Events.OnSpawningItem;
             Events = null;
-            
+            Log.Debug("Events nullified");
+            Log.Debug("Goodbye!");
             base.OnDisabled();
         }
     }

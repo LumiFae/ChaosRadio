@@ -1,6 +1,4 @@
-﻿using Exiled.API.Enums;
-using Exiled.API.Extensions;
-using Exiled.API.Features;
+﻿using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Map;
@@ -16,12 +14,14 @@ namespace ChaosRadio
             if (ev.Player.TryGetRadio(out Item item))
             {
                 Plugin.Instance.NtfRadios.Add(item.Serial);
+                Log.Debug($"Player {ev.Player.Nickname} spawned with NTF Radio");
             }
 
             if (!ev.Player.IsCHI || !ev.SpawnFlags.HasFlag(RoleSpawnFlags.AssignInventory)) return;
             Item radio = Item.Create(ItemType.Radio);
             Plugin.Instance.ChaosRadios.Add(radio.Serial);
             ev.Player.AddItem(radio);
+            Log.Debug($"Given player {ev.Player.Nickname} a Chaos Radio");
         }
 
         public void OnDropped(DroppedItemEventArgs ev)
@@ -29,6 +29,9 @@ namespace ChaosRadio
             if (ev.Pickup is RadioPickup pickup && Plugin.Instance.Config.DisableRadioPickups)
             {
                 pickup.IsEnabled = false;
+                if (!Plugin.Instance.Config.Debug) return;
+                bool isChaosRadio = pickup.IsPickupChaosRadio();
+                Log.Debug($"{(isChaosRadio ? "Chaos" : "NTF")} Radio dropped at {ev.Pickup.Room.Name} in {ev.Pickup.Room.Zone}");
             }
         }
 
@@ -36,7 +39,6 @@ namespace ChaosRadio
         {
             if (ev.Pickup is not RadioPickup) return;
             if (Plugin.Instance.Config.ReplacePercentage == 0) return;
-            ev.ShouldInitiallySpawn = false;
             if(UnityEngine.Random.Range(0, 100) <= Plugin.Instance.Config.ReplacePercentage)
             {
                 Log.Debug($"Spawning Chaos Radio at {ev.Pickup.Room.Name} in {ev.Pickup.Room.Zone}");
