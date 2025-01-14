@@ -1,7 +1,5 @@
 ﻿using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.CustomItems.API;
-using Exiled.CustomItems.API.Features;
 using HarmonyLib;
 
 namespace ChaosRadio
