@@ -4,10 +4,8 @@ namespace ChaosRadio
 {
     public class Translation : ITranslation
     {
-        public string ChaosRadioName = "Chaos Radio";
-        public string ChaosRadioDescription = "Communicate with other Chaos Insurgency members.";
+        public string ChaosRadioPickupText = "You have picked up the <color=green>Chaos Radio</color>";
         
-        public string NtfRadioName = "NTF Radio";
-        public string NtfRadioDescription = "Communicate with other NTF members.";
+        public string NtfRadioPickupText = "You have picked up the <color=blue>NTF Radio</color>";
     }
 }

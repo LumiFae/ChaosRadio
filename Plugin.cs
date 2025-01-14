@@ -48,6 +48,7 @@ namespace ChaosRadio
             Exiled.Events.Handlers.Player.Spawned += Events.OnSpawn;
             Exiled.Events.Handlers.Player.DroppedItem += Events.OnDropped;
             Exiled.Events.Handlers.Map.SpawningItem += Events.OnSpawningItem;
+            Exiled.Events.Handlers.Player.PickingUpItem += Events.OnPickingUpItem;
             Log.Debug("Events initialized and spawned");
             
             base.OnEnabled();
@@ -61,6 +62,7 @@ namespace ChaosRadio
             Exiled.Events.Handlers.Player.Spawned -= Events.OnSpawn;
             Exiled.Events.Handlers.Player.DroppedItem -= Events.OnDropped;
             Exiled.Events.Handlers.Map.SpawningItem -= Events.OnSpawningItem;
+            Exiled.Events.Handlers.Player.PickingUpItem -= Events.OnPickingUpItem;
             Events = null;
             Log.Debug("Events nullified");
             Log.Debug("Goodbye!");

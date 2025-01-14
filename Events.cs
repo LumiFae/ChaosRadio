@@ -49,5 +49,22 @@ namespace ChaosRadio
                 Plugin.Instance.NtfRadios.Add(ev.Pickup.Serial);
             }
         }
+
+        public void OnPickingUpItem(PickingUpItemEventArgs ev)
+        {
+            if (ev.Pickup is RadioPickup pickup)
+            {
+                if (pickup.IsPickupChaosRadio())
+                {
+                    Log.Debug($"Player {ev.Player.Nickname} picked up a Chaos Radio");
+                    ev.Player.ShowHint(Plugin.Instance.Translation.ChaosRadioPickupText);
+                }
+                else
+                {
+                    Log.Debug($"Player {ev.Player.Nickname} picked up a NTF Radio");
+                    ev.Player.ShowHint(Plugin.Instance.Translation.NtfRadioPickupText);
+                }
+            }
+        }
     }
 }
