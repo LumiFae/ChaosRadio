@@ -1,5 +1,4 @@
-﻿using ChaosRadio.Items;
-using Exiled.API.Enums;
+﻿using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.CustomItems.API;
 using Exiled.CustomItems.API.Features;
@@ -20,8 +19,8 @@ namespace ChaosRadio
 
         private Harmony _harmony;
         
-        public CustomItem ChaosRadio { get; private set; }
-        public CustomItem NtfRadio { get; private set; }
+        public List<ushort> ChaosRadios { get; private set; }
+        public List<ushort> NtfRadios { get; private set; }
         
         private Events Events { get; set; }
 
@@ -39,11 +38,8 @@ namespace ChaosRadio
                 Log.Error($"Failed to patch: {e}");
             }
 
-            ChaosRadio = new ChaosRadioItem();
-            ChaosRadio.Register();
-            
-            NtfRadio = new NtfRadioItem();
-            NtfRadio.Register();
+            ChaosRadios = new();
+            NtfRadios = new();
 
             Events = new();
             Exiled.Events.Handlers.Player.Spawned += Events.OnSpawn;
@@ -55,7 +51,8 @@ namespace ChaosRadio
         
         public override void OnDisabled()
         {
-            ChaosRadio = null;
+            ChaosRadios = null;
+            NtfRadios = null;
             
             Exiled.Events.Handlers.Player.Spawned -= Events.OnSpawn;
             Exiled.Events.Handlers.Player.DroppedItem -= Events.OnDropped;

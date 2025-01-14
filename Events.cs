@@ -13,17 +13,15 @@ namespace ChaosRadio
     {
         public void OnSpawn(SpawnedEventArgs ev)
         {
-            if (!ev.SpawnFlags.HasFlag(RoleSpawnFlags.AssignInventory)) return;
-            if (ev.Player.IsCHI)
+            if (ev.Player.TryGetRadio(out Item item))
             {
-                Plugin.Instance.ChaosRadio.Give(ev.Player);
-            } else if (ev.Player.IsNTF || ev.Player.Role == RoleTypeId.FacilityGuard)
-            {
-                Item radio = ev.Player.Items.FirstOrDefault(i => i.Type == ItemType.Radio);
-                if (radio == null) return;
-                ev.Player.RemoveItem(radio);
-                Plugin.Instance.NtfRadio.Give(ev.Player);
+                Plugin.Instance.NtfRadios.Add(item.Serial);
             }
+
+            if (!ev.Player.IsCHI || !ev.SpawnFlags.HasFlag(RoleSpawnFlags.AssignInventory)) return;
+            Item radio = Item.Create(ItemType.Radio);
+            Plugin.Instance.ChaosRadios.Add(radio.Serial);
+            ev.Player.AddItem(radio);
         }
 
         public void OnDropped(DroppedItemEventArgs ev)
@@ -36,19 +34,17 @@ namespace ChaosRadio
 
         public void OnSpawningItem(SpawningItemEventArgs ev)
         {
-            if (ev.Pickup is not RadioPickup pickup) return;
+            if (ev.Pickup is not RadioPickup) return;
             if (Plugin.Instance.Config.ReplacePercentage == 0) return;
             ev.ShouldInitiallySpawn = false;
             if(UnityEngine.Random.Range(0, 100) <= Plugin.Instance.Config.ReplacePercentage)
             {
                 Log.Debug($"Spawning Chaos Radio at {ev.Pickup.Room.Name} in {ev.Pickup.Room.Zone}");
-                Plugin.Instance.ChaosRadio.Spawn(pickup.Position);
-                pickup.Destroy();
+                Plugin.Instance.ChaosRadios.Add(ev.Pickup.Serial);
             } else
             {
                 Log.Debug($"Spawning NTF Radio at {ev.Pickup.Room.Name} in {ev.Pickup.Room.Zone}");
-                Plugin.Instance.NtfRadio.Spawn(pickup.Position);
-                pickup.Destroy();
+                Plugin.Instance.NtfRadios.Add(ev.Pickup.Serial);
             }
         }
     }
