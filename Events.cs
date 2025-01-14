@@ -64,6 +64,8 @@ namespace ChaosRadio
                     Log.Debug($"Player {ev.Player.Nickname} picked up a NTF Radio");
                     ev.Player.ShowHint(Plugin.Instance.Translation.NtfRadioPickupText);
                 }
+
+                pickup.IsEnabled = true;
             }
         }
 
