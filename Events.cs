@@ -1,6 +1,8 @@
-﻿using Exiled.API.Features;
+﻿using AdminToys;
+using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
+using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
 using PlayerRoles;
@@ -28,6 +30,16 @@ namespace ChaosRadio
         {
             if (ev.Pickup is RadioPickup pickup && Plugin.Instance.Config.DisableRadioPickups)
             {
+                if (pickup.IsEnabled)
+                {
+                    Speaker speaker = AdminToy.Get<Speaker>(pickup.GameObject.GetComponent<SpeakerToy>());
+                    if (speaker == null)
+                    {
+                        speaker = Speaker.Create(pickup.Position, pickup.Rotation.eulerAngles, pickup.Scale, true);
+                        speaker.ControllerId = (byte)pickup.Serial;
+                        speaker.Base.gameObject.transform.SetParent(ev.Pickup.GameObject.transform);
+                    }
+                }
                 pickup.IsEnabled = false;
                 if (!Plugin.Instance.Config.Debug) return;
                 bool isChaosRadio = pickup.IsChaosRadio();
@@ -37,16 +49,16 @@ namespace ChaosRadio
 
         public void OnSpawningItem(SpawningItemEventArgs ev)
         {
-            if (ev.Pickup is not RadioPickup) return;
+            if (ev.Pickup is not RadioPickup pickup) return;
             if (Plugin.Instance.Config.ReplacePercentage == 0) return;
             if(UnityEngine.Random.Range(0, 100) <= Plugin.Instance.Config.ReplacePercentage)
             {
-                Log.Debug($"Spawning Chaos Radio at {ev.Pickup.Room.Name} in {ev.Pickup.Room.Zone}");
-                Plugin.Instance.ChaosRadios.Add(ev.Pickup.Serial);
+                Log.Debug($"Spawning Chaos Radio at {pickup.Room.Name} in {pickup.Room.Zone}");
+                Plugin.Instance.ChaosRadios.Add(pickup.Serial);
             } else
             {
-                Log.Debug($"Spawning NTF Radio at {ev.Pickup.Room.Name} in {ev.Pickup.Room.Zone}");
-                Plugin.Instance.NtfRadios.Add(ev.Pickup.Serial);
+                Log.Debug($"Spawning NTF Radio at {pickup.Room.Name} in {pickup.Room.Zone}");
+                Plugin.Instance.NtfRadios.Add(pickup.Serial);
             }
         }
 

@@ -7,11 +7,6 @@ namespace ChaosRadio
     {
         public bool IsEnabled { get; set; } = true;
         public bool Debug { get; set; } = false;
-
-        [Description("The ID of the custom item that will be used for the chaos radio.")]
-        public uint ChaosItemId { get; set; } = 333;
-        [Description("The ID of the custom item that will be used for the NTF radio. Made so people can differentiate between the two.")]
-        public uint NtfItemId { get; set; } = 334;
         
         [Description("Due to a game limitations, you can't split radio pickups, enabling this will turn off all radio pickups.")]
         public bool DisableRadioPickups { get; set; } = true;
