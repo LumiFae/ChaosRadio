@@ -1,6 +1,9 @@
 ﻿using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.API.Features.Pickups;
+using Exiled.API.Features.Toys;
 using HarmonyLib;
+using InventorySystem.Items.Pickups;
 
 namespace ChaosRadio
 {
@@ -19,6 +22,9 @@ namespace ChaosRadio
         
         public List<ushort> ChaosRadios { get; private set; }
         public List<ushort> NtfRadios { get; private set; }
+        
+        public Dictionary<ushort, Speaker> ChaosSpeakers { get; private set; }
+        public Dictionary<ushort, Speaker> NtfSpeakers { get; private set; }
         
         private Events Events { get; set; }
 
@@ -40,14 +46,16 @@ namespace ChaosRadio
 
             ChaosRadios = new();
             NtfRadios = new();
+            ChaosSpeakers = new();
+            NtfSpeakers = new();
             Log.Debug("Lists initialized");
 
             Events = new();
-            Exiled.Events.Handlers.Player.Spawned += Events.OnSpawn;
-            Exiled.Events.Handlers.Player.DroppedItem += Events.OnDropped;
-            Exiled.Events.Handlers.Map.SpawningItem += Events.OnSpawningItem;
+            Exiled.Events.Handlers.Player.Spawned       += Events.OnSpawn;
+            Exiled.Events.Handlers.Player.DroppedItem   += Events.OnDropped;
+            Exiled.Events.Handlers.Map.   SpawningItem  += Events.OnSpawningItem;
             Exiled.Events.Handlers.Player.PickingUpItem += Events.OnPickingUpItem;
-            Exiled.Events.Handlers.Player.ItemAdded += Events.OnItemAdded;
+            Exiled.Events.Handlers.Player.ItemAdded     += Events.OnItemAdded;
             Log.Debug("Events initialized and spawned");
             
             base.OnEnabled();

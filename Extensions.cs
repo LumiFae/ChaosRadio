@@ -1,4 +1,5 @@
-﻿using Exiled.API.Features.Pickups;
+﻿using Exiled.API.Features.Items;
+using Exiled.API.Features.Pickups;
 
 namespace ChaosRadio
 {
@@ -9,15 +10,24 @@ namespace ChaosRadio
             return player.Items.Any(p => p.Type == ItemType.Radio && Plugin.Instance.ChaosRadios.Contains(p.Serial));
         }
 
-        public static bool TryGetRadio(this Exiled.API.Features.Player player, out Exiled.API.Features.Items.Item item)
+        public static bool TryGetRadio(this Exiled.API.Features.Player player, out Item item)
         {
             item = player.Items.FirstOrDefault(p => p.Type == ItemType.Radio);
             return item != null;
         }
         
+        public static bool IsChaosRadio(this Item item)
+        {
+            return item.Type == ItemType.Radio && Plugin.Instance.ChaosRadios.Contains(item.Serial);
+        }
         public static bool IsChaosRadio(this RadioPickup radio)
         {
             return radio.Type == ItemType.Radio && Plugin.Instance.ChaosRadios.Contains(radio.Serial);
+        }
+        
+        public static bool IsNtfRadio(this Item item)
+        {
+            return item.Type == ItemType.Radio && Plugin.Instance.NtfRadios.Contains(item.Serial);
         }
         
         public static bool IsNtfRadio(this RadioPickup radio)

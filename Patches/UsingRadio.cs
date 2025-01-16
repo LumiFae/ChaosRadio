@@ -1,9 +1,13 @@
 ﻿
 using System.Reflection;
 using Exiled.API.Features;
+using Exiled.API.Features.Items;
+using Exiled.API.Features.Pickups;
+using Exiled.API.Features.Toys;
 using HarmonyLib;
 using Mirror;
 using PlayerRoles.Voice;
+using UnityEngine;
 using VoiceChat;
 using VoiceChat.Networking;
 
@@ -33,6 +37,30 @@ namespace ChaosRadio.Patches
         //
         //     ListPool<CodeInstruction>.Shared.Return(newInstructions);
         // }
+
+        private static void GroundedRadiosTransmit(VoiceMessage msg, Player player, bool isChaos)
+        {
+            OpusHandler opusHandler = OpusHandler.Get(player);
+            float[] decodedBuffer = new float[480];
+            opusHandler.Decoder.Decode(msg.Data, msg.DataLength, decodedBuffer);
+
+            for (int i = 0; i < decodedBuffer.Length; i++)
+            {
+                decodedBuffer[i] *= 0.8f;
+            }
+            
+            byte[] encodedData = new byte[512];
+            int dataLen = opusHandler.Encoder.Encode(decodedBuffer, encodedData);
+            Dictionary<ushort, Speaker> speakers = isChaos ? Plugin.Instance.ChaosSpeakers : Plugin.Instance.NtfSpeakers;
+            foreach (KeyValuePair<ushort, Speaker> speakerPair in speakers)
+            {
+                if(Pickup.List.FirstOrDefault(p => p is RadioPickup pickup && pickup.Serial == speakerPair.Key) is not RadioPickup radio) continue;
+                byte savedRange = radio.Base.SavedRange;
+                bool isRadioInRange = Vector3.Distance(player.Position, radio.Position) <= savedRange;
+                if (!isRadioInRange) continue;
+                speakerPair.Value.Play(encodedData, dataLen);
+            }
+        }
         
         public static bool Prefix(NetworkConnection conn, VoiceMessage msg)
         {
@@ -79,6 +107,8 @@ namespace ChaosRadio.Patches
                 
                 allHub.connectionToClient.Send<VoiceMessage>(msg);
             }
+            
+            GroundedRadiosTransmit(msg, player, chaosRadio);
         
             return false;
         }
