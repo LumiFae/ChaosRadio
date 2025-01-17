@@ -1,5 +1,4 @@
-﻿
-using System.Reflection;
+﻿using System.Reflection;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
@@ -40,6 +39,8 @@ namespace ChaosRadio.Patches
 
         private static void GroundedRadiosTransmit(VoiceMessage msg, Player player, bool isChaos)
         {
+            if(!player.TryGetRadio(out Item item)) return;
+            if (item is not Radio radioItem) return;
             OpusHandler opusHandler = OpusHandler.Get(player);
             float[] decodedBuffer = new float[480];
             opusHandler.Decoder.Decode(msg.Data, msg.DataLength, decodedBuffer);
@@ -55,7 +56,7 @@ namespace ChaosRadio.Patches
             foreach (KeyValuePair<ushort, Speaker> speakerPair in speakers)
             {
                 if(Pickup.List.FirstOrDefault(p => p is RadioPickup pickup && pickup.Serial == speakerPair.Key) is not RadioPickup radio) continue;
-                byte savedRange = radio.Base.SavedRange;
+                int savedRange = radioItem.RangeSettings.MaxRange;
                 bool isRadioInRange = Vector3.Distance(player.Position, radio.Position) <= savedRange;
                 if (!isRadioInRange) continue;
                 speakerPair.Value.Play(encodedData, dataLen);
