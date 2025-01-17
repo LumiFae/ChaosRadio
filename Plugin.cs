@@ -3,7 +3,7 @@ using Exiled.API.Features;
 using Exiled.API.Features.Pickups;
 using Exiled.API.Features.Toys;
 using HarmonyLib;
-using InventorySystem.Items.Pickups;
+using MEC;
 
 namespace ChaosRadio
 {
@@ -25,6 +25,8 @@ namespace ChaosRadio
         
         public Dictionary<ushort, Speaker> ChaosSpeakers { get; private set; }
         public Dictionary<ushort, Speaker> NtfSpeakers { get; private set; }
+        
+        public Dictionary<RadioPickup, CoroutineHandle> RadioCoroutines { get; private set; }
         
         private Events Events { get; set; }
 
@@ -48,6 +50,7 @@ namespace ChaosRadio
             NtfRadios = new();
             ChaosSpeakers = new();
             NtfSpeakers = new();
+            RadioCoroutines = new();
             Log.Debug("Lists initialized");
 
             Events = new();
@@ -65,7 +68,11 @@ namespace ChaosRadio
         {
             ChaosRadios = null;
             NtfRadios = null;
+            ChaosSpeakers = null;
+            NtfSpeakers = null;
+            RadioCoroutines = null;
             Log.Debug("Lists nullified");
+            
             Exiled.Events.Handlers.Player.Spawned -= Events.OnSpawn;
             Exiled.Events.Handlers.Player.DroppedItem -= Events.OnDropped;
             Exiled.Events.Handlers.Map.SpawningItem -= Events.OnSpawningItem;
@@ -73,8 +80,20 @@ namespace ChaosRadio
             Exiled.Events.Handlers.Player.ItemAdded -= Events.OnItemAdded;
             Events = null;
             Log.Debug("Events nullified");
+            
             Log.Debug("Goodbye!");
             base.OnDisabled();
+        }
+
+        internal IEnumerator<float> DrainBattery(RadioPickup pickup)
+        {
+            float depletion = InventorySystem.Items.Radio.RadioPickup._radioCache.Ranges[pickup.Base.SavedRange]
+                .MinuteCostWhenIdle/60;
+            while (pickup.BatteryLevel >= 0)
+            {
+                yield return Timing.WaitForSeconds(1);
+                pickup.BatteryLevel -= depletion;
+            }
         }
     }
 }

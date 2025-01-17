@@ -1,17 +1,11 @@
-﻿using AdminToys;
-using Exiled.API.Enums;
-using Exiled.API.Features;
+﻿using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
-using Exiled.API.Features.Roles;
 using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
-using InventorySystem.Items.Pickups;
-using Mirror;
+using MEC;
 using PlayerRoles;
-using VoiceChat;
-using VoiceChat.Networking;
 
 namespace ChaosRadio
 {
@@ -45,6 +39,8 @@ namespace ChaosRadio
                     Plugin.Instance.ChaosSpeakers.Add(pickup.Serial, speaker);
                 else
                     Plugin.Instance.NtfSpeakers.Add(pickup.Serial, speaker);
+                
+                Plugin.Instance.RadioCoroutines.Add(pickup, Timing.RunCoroutine(Plugin.Instance.DrainBattery(pickup)));
             }
             pickup.IsEnabled = false;
             Log.Debug($"{(isChaosRadio ? "Chaos" : "NTF")} Radio dropped at {ev.Pickup.Room.Name} in {ev.Pickup.Room.Zone}");
@@ -68,20 +64,25 @@ namespace ChaosRadio
         public void OnPickingUpItem(PickingUpItemEventArgs ev)
         {
             if (ev.Pickup is not RadioPickup pickup) return;
-            if (pickup.IsChaosRadio())
+            bool chaosRadio = pickup.IsChaosRadio();
+            if (chaosRadio)
             {
                 Log.Debug($"Player {ev.Player.Nickname} picked up a Chaos Radio");
                 ev.Player.ShowHint(Plugin.Instance.Translation.ChaosRadioPickupText);
-                Plugin.Instance.ChaosSpeakers.Remove(pickup.Serial);
             }
             else
             {
                 Log.Debug($"Player {ev.Player.Nickname} picked up a NTF Radio");
                 ev.Player.ShowHint(Plugin.Instance.Translation.NtfRadioPickupText);
-                Plugin.Instance.NtfSpeakers.Remove(pickup.Serial);
             }
 
+            if (!Plugin.Instance.RadioCoroutines.TryGetValue(pickup, out CoroutineHandle handle)) return;
+            Timing.KillCoroutines(handle);
             pickup.IsEnabled = true;
+            if (chaosRadio)
+                Plugin.Instance.ChaosSpeakers.Remove(pickup.Serial);
+            else 
+                Plugin.Instance.NtfSpeakers.Remove(pickup.Serial);
         }
 
         public void OnItemAdded(ItemAddedEventArgs ev)
@@ -98,38 +99,5 @@ namespace ChaosRadio
                 Plugin.Instance.ChaosRadios.Add(radio.Serial);
             }
         }
-
-        // public void OnVoiceChatting(VoiceChattingEventArgs ev)
-        // {
-        //     if (ev.VoiceMessage.Channel != VoiceChatChannel.Radio) return;
-        //     if (!ev.Player.TryGetRadio(out Item item)) return;
-        //     Log.Debug(item);
-        //     bool isChaos = item.IsChaosRadio();
-        //     Log.Debug(isChaos);
-        //     
-        //     OpusHandler opusHandler = OpusHandler.Get(ev.Player);
-        //     float[] decodedBuffer = new float[480];
-        //     opusHandler.Decoder.Decode(ev.VoiceMessage.Data, ev.VoiceMessage.DataLength, decodedBuffer);
-        //
-        //     byte[] encodedData = new byte[512];
-        //     int dataLen = opusHandler.Encoder.Encode(decodedBuffer, encodedData);
-        //     Dictionary<ushort, Speaker> speakers = isChaos ? Plugin.Instance.ChaosSpeakers : Plugin.Instance.NtfSpeakers;
-        //     Log.Debug(speakers);
-        //     foreach (KeyValuePair<ushort, Speaker> speakerPair in speakers)
-        //     {
-        //         AudioMessage audioMessage = new (speakerPair.Value.ControllerId, encodedData, dataLen);
-        //         foreach (Player player in Player.List)
-        //         {
-        //             if(player.Role is not IVoiceRole voiceRole  || voiceRole.VoiceModule.ValidateReceive(player.ReferenceHub, VoiceChatChannel.Proximity) == VoiceChatChannel.None) continue;
-        //             
-        //             player.ReferenceHub.connectionToClient.Send(audioMessage);
-        //         }
-        //     }
-        // }
-        //
-        // public void OnTransmitting(TransmittingEventArgs ev)
-        // {
-        //     Log.Debug("Transmitting");
-        // }
     }
 }
