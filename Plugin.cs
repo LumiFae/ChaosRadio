@@ -14,7 +14,7 @@ namespace ChaosRadio
         public override string Name => "ChaosRadio";
         public override string Author => "LumiFae";
         public override string Prefix => "ChaosRadio";
-        public override Version Version => new (1, 1, 0);
+        public override Version Version => new (1, 2, 0);
         public override Version RequiredExiledVersion => new (9, 3, 0);
         public override PluginPriority Priority => PluginPriority.Default;
 
