@@ -1,12 +1,19 @@
 ﻿using System.ComponentModel;
+#if EXILED
 using Exiled.API.Interfaces;
+#endif
 
 namespace ChaosRadio
 {
-    public class Config : IConfig
+    public class Config 
+#if EXILED
+        : IConfig
+#endif
     {
+#if EXILED
         public bool IsEnabled { get; set; } = true;
         public bool Debug { get; set; } = false;
+#endif
         
         [Description("Due to a game limitations, you can't split radio pickups, enabling this will turn off all radio pickups.")]
         public bool DisableRadioPickups { get; set; } = true;

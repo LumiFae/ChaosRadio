@@ -1,4 +1,4 @@
-﻿using Exiled.API.Features;
+﻿using LabApi.Features.Wrappers;
 using VoiceChat.Codec;
 using VoiceChat.Codec.Enums;
 

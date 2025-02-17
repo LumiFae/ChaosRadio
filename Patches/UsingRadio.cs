@@ -1,14 +1,15 @@
 ﻿using System.Reflection;
-using Exiled.API.Features;
-using Exiled.API.Features.Items;
-using Exiled.API.Features.Pickups;
-using Exiled.API.Features.Toys;
+using AdminToys;
 using HarmonyLib;
+using InventorySystem.Items.Radio;
+using LabApi.Features.Wrappers;
 using Mirror;
 using PlayerRoles.Voice;
 using UnityEngine;
+using Utils.Networking;
 using VoiceChat;
 using VoiceChat.Networking;
+using RadioItem = InventorySystem.Items.Radio.RadioItem;
 
 namespace ChaosRadio.Patches
 {
@@ -40,7 +41,7 @@ namespace ChaosRadio.Patches
         private static void GroundedRadiosTransmit(VoiceMessage msg, Player player, bool isChaos)
         {
             if(!player.TryGetRadio(out Item item)) return;
-            if (item is not Radio radioItem) return;
+            if (item.Base is not RadioItem radioItem) return;
             OpusHandler opusHandler = OpusHandler.Get(player);
             float[] decodedBuffer = new float[480];
             opusHandler.Decoder.Decode(msg.Data, msg.DataLength, decodedBuffer);
@@ -52,14 +53,15 @@ namespace ChaosRadio.Patches
             
             byte[] encodedData = new byte[512];
             int dataLen = opusHandler.Encoder.Encode(decodedBuffer, encodedData);
-            Dictionary<ushort, Speaker> speakers = isChaos ? Plugin.Instance.ChaosSpeakers : Plugin.Instance.NtfSpeakers;
-            foreach (KeyValuePair<ushort, Speaker> speakerPair in speakers)
+            Dictionary<ushort, SpeakerToy> speakers = isChaos ? Plugin.Instance.ChaosSpeakers : Plugin.Instance.NtfSpeakers;
+            foreach (KeyValuePair<ushort, SpeakerToy> speakerPair in speakers)
             {
-                if(Pickup.List.FirstOrDefault(p => p is RadioPickup pickup && pickup.Serial == speakerPair.Key) is not RadioPickup radio) continue;
-                int savedRange = radioItem.RangeSettings.MaxRange;
+                if(Pickup.List.FirstOrDefault(p => p.Base is RadioPickup pickup && pickup.Info.Serial == speakerPair.Key)?.Base is not RadioPickup radio) continue;
+                int savedRange = radioItem.Ranges[radioItem._rangeId].MaximumRange;
                 bool isRadioInRange = Vector3.Distance(player.Position, radio.Position) <= savedRange;
                 if (!isRadioInRange) continue;
-                speakerPair.Value.Play(encodedData, dataLen);
+                AudioMessage msgToSend = new(speakerPair.Value.ControllerId, encodedData, dataLen);
+                msgToSend.SendToAuthenticated();
             }
         }
         
@@ -67,7 +69,7 @@ namespace ChaosRadio.Patches
         {
             if (msg.Channel != VoiceChatChannel.Radio) return true;
             
-            if (!Player.TryGet(msg.Speaker, out Player player)) return false;
+            if(!Player.Dictionary.TryGetValue(msg.Speaker, out Player player)) return false;
 
             bool chaosRadio = player.HasChaosRadio();
             

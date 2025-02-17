@@ -1,8 +1,13 @@
-﻿using Exiled.API.Interfaces;
+﻿#if EXILED
+using Exiled.API.Interfaces;
+#endif
 
 namespace ChaosRadio
 {
-    public class Translation : ITranslation
+    public class Translation 
+#if EXILED
+        : ITranslation
+#endif
     {
         public string ChaosRadioPickupText = "You have picked up the <color=green>Chaos Radio</color>";
         

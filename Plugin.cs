@@ -1,49 +1,79 @@
-﻿using Exiled.API.Enums;
+﻿using AdminToys;
+#if EXILED
+using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.API.Features.Pickups;
-using Exiled.API.Features.Toys;
+#endif
 using HarmonyLib;
+using InventorySystem;
+using InventorySystem.Items.Radio;
+using LabApi.Events.Handlers;
+using LabApi.Features;
+using LabApi.Loader;
 using MEC;
+using Mirror;
+using UnityEngine;
+using Logger = LabApi.Features.Console.Logger;
 
 namespace ChaosRadio
 {
-    public class Plugin : Plugin<Config, Translation>
+    public class Plugin : 
+#if EXILED
+        Plugin<Config, Translation>
+#else
+    LabApi.Loader.Features.Plugins.Plugin
+#endif
     {
         public static Plugin Instance { get; private set; }
         
         public override string Name => "ChaosRadio";
         public override string Author => "LumiFae";
+#if EXILED
         public override string Prefix => "ChaosRadio";
-        public override Version Version => new (1, 2, 0);
         public override Version RequiredExiledVersion => new (9, 3, 0);
         public override PluginPriority Priority => PluginPriority.Default;
+#else
+        public override string Description { get; } = "Adds a secondary radio channel, given to chaos insurgency.";
+        public override Version RequiredApiVersion { get; } = new(LabApiProperties.CompiledVersion);
+        
+        public Config Config { get; private set; }
+        public Translation Translation { get; private set; }
+#endif
+        public override Version Version => new (1, 3, 0);
 
         private Harmony _harmony;
         
         public List<ushort> ChaosRadios { get; private set; }
         public List<ushort> NtfRadios { get; private set; }
         
-        public Dictionary<ushort, Speaker> ChaosSpeakers { get; private set; }
-        public Dictionary<ushort, Speaker> NtfSpeakers { get; private set; }
+        public Dictionary<ushort, SpeakerToy> ChaosSpeakers { get; private set; }
+        public Dictionary<ushort, SpeakerToy> NtfSpeakers { get; private set; }
         
         public Dictionary<RadioPickup, CoroutineHandle> RadioCoroutines { get; private set; }
         
+        private SpeakerToy SpeakerPrefab { get; set; }
+        
         private Events Events { get; set; }
 
+#if EXILED
         public override void OnEnabled()
+#else
+        public override void Enable()
+#endif
         {
-            Log.Debug("Hello!");
             Instance = this;
 
             try
             {
                 _harmony = new($"lumifae.chaosradio.{DateTime.Now.Ticks}");
                 _harmony.PatchAll();
-                Log.Debug("Patch successful");
             }
             catch (Exception e)
             {
+#if EXILED
                 Log.Error($"Failed to patch: {e}");
+#else
+                Logger.Error($"Failed to patch: {e}");
+#endif
             }
 
             ChaosRadios = new();
@@ -51,49 +81,73 @@ namespace ChaosRadio
             ChaosSpeakers = new();
             NtfSpeakers = new();
             RadioCoroutines = new();
-            Log.Debug("Lists initialized");
 
             Events = new();
-            Exiled.Events.Handlers.Player.Spawned       += Events.OnSpawn;
-            Exiled.Events.Handlers.Player.DroppedItem   += Events.OnDropped;
-            Exiled.Events.Handlers.Map.   SpawningItem  += Events.OnSpawningItem;
-            Exiled.Events.Handlers.Player.PickingUpItem += Events.OnPickingUpItem;
-            Exiled.Events.Handlers.Player.ItemAdded     += Events.OnItemAdded;
-            Log.Debug("Events initialized and spawned");
-            
+            PlayerEvents.ReceivedLoadout += Events.OnReceivedLoadout;
+            PlayerEvents.DroppedItem += Events.OnDropped;
+            ServerEvents.ItemSpawned += Events.OnSpawnedItem;
+            PlayerEvents.PickingUpItem += Events.OnPickingUpItem;
+            InventoryExtensions.OnItemAdded += Events.OnItemAdded;
+#if EXILED
             base.OnEnabled();
+#endif
         }
-        
+
+#if EXILED
         public override void OnDisabled()
+#else
+        public override void Disable()
+#endif
         {
             ChaosRadios = null;
             NtfRadios = null;
             ChaosSpeakers = null;
             NtfSpeakers = null;
             RadioCoroutines = null;
-            Log.Debug("Lists nullified");
             
-            Exiled.Events.Handlers.Player.Spawned -= Events.OnSpawn;
-            Exiled.Events.Handlers.Player.DroppedItem -= Events.OnDropped;
-            Exiled.Events.Handlers.Map.SpawningItem -= Events.OnSpawningItem;
-            Exiled.Events.Handlers.Player.PickingUpItem -= Events.OnPickingUpItem;
-            Exiled.Events.Handlers.Player.ItemAdded -= Events.OnItemAdded;
+            PlayerEvents.ReceivedLoadout -= Events.OnReceivedLoadout;
+            PlayerEvents.DroppedItem -= Events.OnDropped;
+            ServerEvents.ItemSpawned -= Events.OnSpawnedItem;
+            PlayerEvents.PickingUpItem -= Events.OnPickingUpItem;
+            InventoryExtensions.OnItemAdded -= Events.OnItemAdded;
             Events = null;
-            Log.Debug("Events nullified");
-            
-            Log.Debug("Goodbye!");
+#if EXILED
             base.OnDisabled();
+#endif
         }
+        
+#if LABAPI
+        public override void LoadConfigs()
+        {
+            this.TryLoadConfig("config.yml", out Config config);
+            this.TryLoadConfig("translation.yml", out Translation translation);
+            Config = config ?? new();
+            Translation = translation ?? new();
+        }
+#endif
 
         internal IEnumerator<float> DrainBattery(RadioPickup pickup)
         {
-            float depletion = InventorySystem.Items.Radio.RadioPickup._radioCache.Ranges[pickup.Base.SavedRange]
+            float depletion = RadioPickup._radioCache.Ranges[pickup.SavedRange]
                 .MinuteCostWhenIdle/60;
-            while (pickup.BatteryLevel >= 0)
+            while (pickup.SavedBattery >= 0)
             {
                 yield return Timing.WaitForSeconds(1);
-                pickup.BatteryLevel -= depletion;
+                pickup.SavedBattery -= depletion;
             }
+        }
+
+        internal SpeakerToy GetSpeakerPrefab()
+        {
+            if(SpeakerPrefab != null) return SpeakerPrefab;
+            foreach (GameObject prefabsValue in NetworkClient.prefabs.Values)
+            {
+                if (!prefabsValue.TryGetComponent(out SpeakerToy toy)) continue;
+                SpeakerPrefab = toy;
+                return toy;
+            }
+
+            return null;
         }
     }
 }

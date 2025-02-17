@@ -1,30 +1,32 @@
-﻿using Exiled.API.Features.Items;
-using Exiled.API.Features.Pickups;
+﻿using InventorySystem.Items.Radio;
+using LabApi.Features.Console;
+using LabApi.Features.Wrappers;
 
 namespace ChaosRadio
 {
     public static class Extensions
     {
-        public static bool HasChaosRadio(this Exiled.API.Features.Player player)
+        public static IEnumerable<Item> GetItems(this Player player)
         {
-            return player.Items.Any(p => p.Type == ItemType.Radio && Plugin.Instance.ChaosRadios.Contains(p.Serial));
+            return player.Inventory.UserInventory.Items.Values.Select(Item.Get);
         }
-
-        public static bool TryGetRadio(this Exiled.API.Features.Player player, out Item item)
+        public static bool HasChaosRadio(this Player player)
         {
-            item = player.Items.FirstOrDefault(p => p.Type == ItemType.Radio);
+            return player.GetItems().Any(p => p.Type == ItemType.Radio && Plugin.Instance.ChaosRadios.Contains(p.Serial));
+        }
+        public static bool TryGetRadio(this Player player, out Item item)
+        {
+            item = player.GetItems().FirstOrDefault(p => p.Type == ItemType.Radio);
             return item != null;
         }
-        
         public static bool IsChaosRadio(this Item item)
         {
             return item.Type == ItemType.Radio && Plugin.Instance.ChaosRadios.Contains(item.Serial);
         }
         public static bool IsChaosRadio(this RadioPickup radio)
         {
-            return radio.Type == ItemType.Radio && Plugin.Instance.ChaosRadios.Contains(radio.Serial);
+            return radio.NetworkInfo.ItemId == ItemType.Radio && Plugin.Instance.ChaosRadios.Contains(radio.Info.Serial);
         }
-        
         public static bool IsNtfRadio(this Item item)
         {
             return item.Type == ItemType.Radio && Plugin.Instance.NtfRadios.Contains(item.Serial);
@@ -32,7 +34,7 @@ namespace ChaosRadio
         
         public static bool IsNtfRadio(this RadioPickup radio)
         {
-            return radio.Type == ItemType.Radio && Plugin.Instance.NtfRadios.Contains(radio.Serial);
+            return radio.NetworkInfo.ItemId == ItemType.Radio && Plugin.Instance.NtfRadios.Contains(radio.Info.Serial);
         }
 
         public static bool HasSerial(this RadioPickup radio)
