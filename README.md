@@ -17,3 +17,7 @@ Put the LabAPI .dll in your LabAPI plugins folder.
 EXILED:
 
 Just put the .dll inside your Exiled plugins folder. This is built for Exiled 9.3.0, but it may work for all 9.0.0 versions.
+
+## Support
+
+Need support? Join my Discord: https://discord.gg/4XGASxrN
