@@ -99,6 +99,9 @@ namespace ChaosRadio
         public override void Disable()
 #endif
         {
+            _harmony.UnpatchAll();
+            _harmony = null;
+            
             ChaosRadios = null;
             NtfRadios = null;
             ChaosSpeakers = null;
