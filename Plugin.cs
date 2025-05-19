@@ -1,17 +1,13 @@
-﻿using AdminToys;
-#if EXILED
+﻿#if EXILED
 using Exiled.API.Enums;
 using Exiled.API.Features;
 #endif
 using HarmonyLib;
-using InventorySystem;
-using InventorySystem.Items.Radio;
 using LabApi.Events.Handlers;
 using LabApi.Features;
+using LabApi.Features.Wrappers;
 using LabApi.Loader;
 using MEC;
-using Mirror;
-using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
 
 namespace ChaosRadio
@@ -50,8 +46,6 @@ namespace ChaosRadio
         
         public Dictionary<RadioPickup, CoroutineHandle> RadioCoroutines { get; private set; }
         
-        private SpeakerToy SpeakerPrefab { get; set; }
-        
         private Events Events { get; set; }
 
 #if EXILED
@@ -87,7 +81,7 @@ namespace ChaosRadio
             PlayerEvents.DroppedItem += Events.OnDropped;
             ServerEvents.ItemSpawned += Events.OnSpawnedItem;
             PlayerEvents.PickingUpItem += Events.OnPickingUpItem;
-            InventoryExtensions.OnItemAdded += Events.OnItemAdded;
+            InventorySystem.InventoryExtensions.OnItemAdded += Events.OnItemAdded;
 #if EXILED
             base.OnEnabled();
 #endif
@@ -112,7 +106,7 @@ namespace ChaosRadio
             PlayerEvents.DroppedItem -= Events.OnDropped;
             ServerEvents.ItemSpawned -= Events.OnSpawnedItem;
             PlayerEvents.PickingUpItem -= Events.OnPickingUpItem;
-            InventoryExtensions.OnItemAdded -= Events.OnItemAdded;
+            InventorySystem.InventoryExtensions.OnItemAdded -= Events.OnItemAdded;
             Events = null;
 #if EXILED
             base.OnDisabled();
@@ -131,26 +125,14 @@ namespace ChaosRadio
 
         internal IEnumerator<float> DrainBattery(RadioPickup pickup)
         {
-            float depletion = RadioPickup._radioCache.Ranges[pickup.SavedRange]
+            float depletion = InventorySystem.Items.Radio.RadioPickup._radioCache.Ranges[pickup.Base.SavedRange]
                 .MinuteCostWhenIdle/60;
-            while (pickup.SavedBattery >= 0)
+            
+            while (pickup.Battery >= 0)
             {
                 yield return Timing.WaitForSeconds(1);
-                pickup.SavedBattery -= depletion;
+                pickup.Battery -= depletion;
             }
-        }
-
-        internal SpeakerToy GetSpeakerPrefab()
-        {
-            if(SpeakerPrefab != null) return SpeakerPrefab;
-            foreach (GameObject prefabsValue in NetworkClient.prefabs.Values)
-            {
-                if (!prefabsValue.TryGetComponent(out SpeakerToy toy)) continue;
-                SpeakerPrefab = toy;
-                return toy;
-            }
-
-            return null;
         }
     }
 }

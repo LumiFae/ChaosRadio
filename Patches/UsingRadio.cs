@@ -1,7 +1,5 @@
 ﻿using System.Reflection;
-using AdminToys;
 using HarmonyLib;
-using InventorySystem.Items.Radio;
 using LabApi.Features.Wrappers;
 using Mirror;
 using PlayerRoles.Voice;
@@ -42,25 +40,15 @@ namespace ChaosRadio.Patches
         {
             if(!player.TryGetRadio(out Item item)) return;
             if (item.Base is not RadioItem radioItem) return;
-            OpusHandler opusHandler = OpusHandler.Get(player);
-            float[] decodedBuffer = new float[480];
-            opusHandler.Decoder.Decode(msg.Data, msg.DataLength, decodedBuffer);
-
-            for (int i = 0; i < decodedBuffer.Length; i++)
-            {
-                decodedBuffer[i] *= 0.8f;
-            }
             
-            byte[] encodedData = new byte[512];
-            int dataLen = opusHandler.Encoder.Encode(decodedBuffer, encodedData);
             Dictionary<ushort, SpeakerToy> speakers = isChaos ? Plugin.Instance.ChaosSpeakers : Plugin.Instance.NtfSpeakers;
             foreach (KeyValuePair<ushort, SpeakerToy> speakerPair in speakers)
             {
-                if(Pickup.List.FirstOrDefault(p => p.Base is RadioPickup pickup && pickup.Info.Serial == speakerPair.Key)?.Base is not RadioPickup radio) continue;
+                if(Pickup.List.FirstOrDefault(p => p is RadioPickup pickup && pickup.Serial == speakerPair.Key) is not RadioPickup radio) continue;
                 int savedRange = radioItem.Ranges[radioItem._rangeId].MaximumRange;
                 bool isRadioInRange = Vector3.Distance(player.Position, radio.Position) <= savedRange;
                 if (!isRadioInRange) continue;
-                AudioMessage msgToSend = new(speakerPair.Value.ControllerId, encodedData, dataLen);
+                AudioMessage msgToSend = new(speakerPair.Value.ControllerId, msg.Data, msg.DataLength);
                 msgToSend.SendToAuthenticated();
             }
         }
